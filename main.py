@@ -1,16 +1,21 @@
 from classes.buff import Buff
+from classes.buffIds import BuffId
 import csv
-import os
+
 
 prices_file='../prices.csv'
 
 buff=Buff()
-itemID="43091"
-precio=buff.getBuffPrice(itemID)
+buff_id=BuffId()
+itemNameBuscar=input("Type the name of the item to lookup: ")
+itemID=buff_id.search_id(itemNameBuscar)
+precios=buff.getBuffPriceById(itemID)
 
-with open(prices_file,'w',newline='') as file:
-    writer=csv.writer(file)
-    writer.writerow(['Precio'])
+data=[[itemNameBuscar,str(precio)]for precio in precios]
 
-    for precio in precio:
-        writer.writerow([precio])
+
+with open(prices_file,'w',newline='',encoding="utf8") as file:
+     writer=csv.writer(file,delimiter=',')
+     writer.writerow(['Item','Price'])
+     for item in data:
+        writer.writerow(item)

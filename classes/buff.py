@@ -1,7 +1,7 @@
 import requests
 
 class Buff:
-    def getBuffPrice(self,itemID):
+    def getBuffPriceById(self,itemID):
         URL ="https://buff.163.com/api/market/goods/sell_order"
         params={
             "game" : "csgo",
