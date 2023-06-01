@@ -1,7 +1,34 @@
-# buffPrices
-Check buff sell prices for given csgo items
-### How to use
-1. Install requirements </br>
-`
-    pip install -r requirements.txt
-`
+# BuffPrices
+
+This program allows you to check the sell prices of CS:GO items and store the information in a CSV file.
+
+## Requirements
+
+Before using this program, make sure you have the following requirements:
+
+1. Python: You will need to have [Python](https://www.python.org/) installed on your system.
+
+## Installation
+
+Follow these steps to install and set up the program:
+
+1. Clone or download this repository to your local machine.
+
+2. Navigate to the project folder:
+
+3. Install the necessary dependencies using the following command:</br>
+`pip install -r requirements.txt`
+
+## Usage
+
+To use the program, follow these steps:
+
+1. Run the main.py file from the command line or using your favorite IDE.
+
+2. You will be prompted to enter the name of the item you want to check. For example: "★ M9 Bayonet | Bright Water (Field-Tested)".
+
+3. The program will generate a CSV file at the "../prices.csv" path with the name of the item, its price, and other relevant attributes such as phase in Dopplers or fade percentage in Fades.
+
+
+---
+Feel free to customize the content according to your needs and add any other relevant sections for your project!
