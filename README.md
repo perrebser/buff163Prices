@@ -32,3 +32,7 @@ To use the program, follow these steps:
 
 ---
 Feel free to customize the content according to your needs and add any other relevant sections for your project!
+
+## Credits
+
+I would like to express my gratitude to [ModestSerhat](https://github.com/ModestSerhat) for providing the repository [buff163-ids](https://github.com/ModestSerhat/buff163-ids) which was instrumental in obtaining the IDs of CS:GO items for this project. Their work has greatly contributed to the functionality of this program.

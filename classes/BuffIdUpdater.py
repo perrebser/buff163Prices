@@ -3,6 +3,7 @@ import requests
 
 
 class BuffIdUpdater:
+    # This class is based on a project by ModestSerhat on GitHub. It is used to obtain the goods ID based on their name.
     URL = "https://raw.githubusercontent.com/ModestSerhat/buff163-ids/main/buffids.txt"
     FILE_NAME = "goodsIds.txt"
 
