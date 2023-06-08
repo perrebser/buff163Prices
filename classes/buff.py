@@ -9,7 +9,7 @@ class Buff:
         rate = 1 / float(r["rates"][pair]["rate"])
         return rate
 
-    def getBuffPriceById(self, itemID, rate):
+    def get_price_item(self, itemID, rate):
         URL = "https://buff.163.com/api/market/goods/sell_order"
         params = {
             "game": "csgo",
@@ -27,3 +27,9 @@ class Buff:
             item_data = {"price": price, "priceUSD": price_usd, "Phase/Fade": metaphysic}
             data.append(item_data)
         return data
+
+    def getBuffPriceById(self, item_id_list, rate):
+        items_prices = []
+        for item in item_id_list:
+            items_prices.append(self.get_price_item(item, rate))
+        return items_prices

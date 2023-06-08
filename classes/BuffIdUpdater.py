@@ -24,11 +24,22 @@ class BuffIdUpdater:
             with open(BuffIdUpdater.FILE_NAME, 'w', encoding="utf8") as file:
                 file.write(new_content)
 
-    def search_id(self, itemname):
+    def search_id(self, item_list):
+        id_list = []
         with open(BuffIdUpdater.FILE_NAME, 'r', encoding="utf8") as file:
             lines = file.readlines()
-            for line in lines:
-                id, name = line.strip().split(';')
-                if itemname == name:
-                    return id
-            return None
+            for item in item_list:
+                found = False
+                for line in lines:
+                    id, name = line.strip().split(';')
+                    if item == name:
+                        id_list.append(id)
+                        found = True
+                        break
+                if not found:
+                    id_list.append(None)
+
+                file.seek(0)
+
+        return id_list
+
