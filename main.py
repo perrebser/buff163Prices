@@ -1,12 +1,14 @@
 from classes.buff import Buff
 from classes.BuffIdUpdater import BuffIdUpdater
+from gui.main_window import MainWindow
 import csv
 
 prices_file = '../prices.csv'
 
 buff = Buff()
 buff_id = BuffIdUpdater()
-
+#window=MainWindow()
+#window.mainloop()
 item_list = []
 while True:
     itemName = input("Type the name/s of the item to lookup (0 for exit): ")

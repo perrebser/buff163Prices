@@ -42,4 +42,3 @@ class BuffIdUpdater:
                 file.seek(0)
 
         return id_list
-

@@ -33,3 +33,12 @@ class Buff:
         for item in item_id_list:
             items_prices.append(self.get_price_item(item, rate))
         return items_prices
+
+    def get_buyorder_item(self, itemId, rate):
+        URL = "https://buff.163.com/api/market/goods/buy_order"
+        params = {
+            "game": "csgo",
+            "page_num": "1",
+            "goods_id": itemId
+        }
+        r = requests.get(URL, params=params).json()
