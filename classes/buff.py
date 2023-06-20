@@ -1,5 +1,5 @@
 import requests
-
+import pandas as pd
 
 class Buff:
     def currencyConverter(self, toCurrency, fromCurrency):
@@ -42,3 +42,11 @@ class Buff:
             "goods_id": itemId
         }
         r = requests.get(URL, params=params).json()
+        items=r["data"]["items"][:3]
+        data=[]
+        for item in items:
+            price=float(item["price"])
+            price_usd=round(float(price*rate),2)
+            item_data={"price": price,"priceUSD": price_usd}
+            df=pd.DataFrame(item_data)
+            return df
