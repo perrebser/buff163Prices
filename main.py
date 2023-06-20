@@ -9,6 +9,7 @@ buff = Buff()
 buff_id = BuffIdUpdater()
 #window=MainWindow()
 #window.mainloop()
+
 item_list = []
 while True:
     itemName = input("Type the name/s of the item to lookup (0 for exit): ")
