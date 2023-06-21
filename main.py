@@ -7,10 +7,12 @@ prices_file = '../prices.csv'
 
 buff = Buff()
 buff_id = BuffIdUpdater()
-#window=MainWindow()
-#window.mainloop()
+# window=MainWindow()
+# window.mainloop()
 
 item_list = []
+numOffersToCheck = int(input("How many offers would you like to check?Type the number of offers you want to check: (1,2,"
+                          "3...): "))
 while True:
     itemName = input("Type the name/s of the item to lookup (0 for exit): ")
     if itemName == "0":
@@ -20,7 +22,7 @@ while True:
 pair = input("Type the currency you want to convert to: ")  # At the moment only usd
 rate = buff.currencyConverter("cny", pair)
 item_id_list = buff_id.search_id(item_list)
-prices = buff.getBuffPriceById(item_id_list, rate)
+prices = buff.getBuffPriceById(item_id_list, rate, numOffersToCheck)
 
 data = []
 for i, item_prices in enumerate(prices):
@@ -30,7 +32,6 @@ for i, item_prices in enumerate(prices):
         price_value_usd = str(price['priceUSD'])
         phase_fade = price['Phase/Fade']
         data.append([item_name, price_value, price_value_usd, phase_fade])
-
 
 with open(prices_file, 'w', newline='', encoding="utf8") as file:
     writer = csv.writer(file, delimiter=',')

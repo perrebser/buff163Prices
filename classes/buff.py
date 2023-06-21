@@ -1,6 +1,7 @@
 import requests
 import pandas as pd
 
+
 class Buff:
     def currencyConverter(self, toCurrency, fromCurrency):
         pair = fromCurrency.upper() + toCurrency.upper()
@@ -9,7 +10,7 @@ class Buff:
         rate = 1 / float(r["rates"][pair]["rate"])
         return rate
 
-    def get_price_item(self, itemID, rate):
+    def get_price_item(self, itemID, rate, numOffersToCheck):
         URL = "https://buff.163.com/api/market/goods/sell_order"
         params = {
             "game": "csgo",
@@ -17,7 +18,7 @@ class Buff:
             "goods_id": itemID
         }
         r = requests.get(URL, params=params).json()
-        items = r["data"]["items"][:3]
+        items = r["data"]["items"][:numOffersToCheck]
         data = []
         for item in items:
             price = float(item["price"])
@@ -28,10 +29,10 @@ class Buff:
             data.append(item_data)
         return data
 
-    def getBuffPriceById(self, item_id_list, rate):
+    def getBuffPriceById(self, item_id_list, rate, numOffersToCheck):
         items_prices = []
         for item in item_id_list:
-            items_prices.append(self.get_price_item(item, rate))
+            items_prices.append(self.get_price_item(item, rate, numOffersToCheck))
         return items_prices
 
     def get_buyorder_item(self, itemId, rate):
@@ -42,11 +43,11 @@ class Buff:
             "goods_id": itemId
         }
         r = requests.get(URL, params=params).json()
-        items=r["data"]["items"][:3]
-        data=[]
+        items = r["data"]["items"][:3]
+        data = []
         for item in items:
-            price=float(item["price"])
-            price_usd=round(float(price*rate),2)
-            item_data={"price": price,"priceUSD": price_usd}
-            df=pd.DataFrame(item_data)
+            price = float(item["price"])
+            price_usd = round(float(price * rate), 2)
+            item_data = {"price": price, "priceUSD": price_usd}
+            df = pd.DataFrame(item_data)
             return df
