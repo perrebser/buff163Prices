@@ -1,3 +1,4 @@
+import csv
 import os
 import requests
 import pandas as pd
@@ -7,10 +8,11 @@ class BuffIdUpdater:
     # This class is based on a project by ModestSerhat on GitHub. It is used to obtain the goods ID based on their name.
     URL = "https://raw.githubusercontent.com/ModestSerhat/buff163-ids/main/buffids.txt"
     FILE_NAME = "goodsIds.txt"
+    dicdt = {}
 
     def __init__(self):
         self.update_file_items_id()
-        self.dataframe_items = self.store_in_dataframe()
+        self.store_in_dict()
 
     def update_file_items_id(self):
         response = requests.get(BuffIdUpdater.URL)
@@ -26,17 +28,17 @@ class BuffIdUpdater:
             with open(BuffIdUpdater.FILE_NAME, 'w', encoding="utf8") as file:
                 file.write(new_content)
 
-    def store_in_dataframe(self):
-        dataframe_items = pd.read_csv(BuffIdUpdater.FILE_NAME, sep=";", header=None, names=["id", "name"])
-        dataframe_items.set_index("name",inplace=True)
-        return dataframe_items
+
+    def store_in_dict(self):
+        with open(BuffIdUpdater.FILE_NAME,'r',encoding="utf8")as file:
+            reader=csv.reader(file,delimiter=';')
+            for row in reader:
+                item_id=row[0]
+                item_name=row[1]
+                self.dicdt[item_name]=item_id
 
     def search_id(self, item_list):
         id_list = []
         for item in item_list:
-            if item in item_list:
-                if item in self.dataframe_items.index:
-                    id_list.append(self.dataframe_items.loc[item,"id"])
-                else:
-                    id_list.append(None)
+             id_list.append(self.dicdt.get(item))
         return id_list
