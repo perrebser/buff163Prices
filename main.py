@@ -13,11 +13,19 @@ buff_id = BuffIdUpdater()
 item_list = []
 numOffersToCheck = int(input("How many offers would you like to check?Type the number of offers you want to check: (1,2,"
                           "3...): "))
-while True:
-    itemName = input("Type the name/s of the item to lookup (0 for exit): ")
-    if itemName == "0":
-        break
+check_with_file=input("Would you like to read item name from txt file or input manually? Y(file)/N(manual)")
+if(check_with_file!='Y'):
+    while True:
+        itemName = input("Type the name/s of the item to lookup (0 for exit): ")
+        if itemName == "0":
+            break
     item_list.append(itemName)
+else:
+    file_dir=input("Type the name of the file with the items name(must be in this directory): ")
+    with open(file_dir, 'r',encoding="utf8") as file:
+        items=file.read().splitlines()
+        for item in items:
+            item_list.append(item)
 
 pair = input("Type the currency you want to convert to: ")  # At the moment only usd
 rate = buff.currencyConverter("cny", pair)
