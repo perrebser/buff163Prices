@@ -24,9 +24,11 @@ Follow these steps to install and set up the program:
 To use the program, follow these steps:
 
 1. Run the main.py file from the command line or using your favorite IDE.
-2. You will be prompted to enter the names of the items you want to check. For example: "★ M9 Bayonet | Bright Water (Field-Tested)" when you have added all the items you want to search for, write 0 to make the search.
-3. You can also add the currency in which you want the price of the items (currently only USD).
-4. The program will generate a CSV file at the "../prices.csv" path with the name of the items, their price, and other relevant attributes such as phase in Dopplers or fade percentage in Fades.
+2. You will be prompted to enter how many offers for one item you want to check.(1,2,3... For the cheapest offer, the two cheapest offers...)
+3. You will be prompted to enter the names of the items you want to check. For example: "★ M9 Bayonet | Bright Water (Field-Tested)" when you have added all the items you want to search for, write 0 to make the search.
+4. You can also specify the name of a file(**.txt**) in the application directory where you have multiple item names to read them all at once.
+5. You can also add the currency in which you want the price of the items (currently only USD).
+6. The program will generate a CSV file at the "../prices.csv" path with the name of the items, their price, and other relevant attributes such as phase in Dopplers or fade percentage in Fades.
 
 
 ---
