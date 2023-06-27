@@ -1,3 +1,7 @@
+import asyncio
+import urllib
+
+import aiohttp
 import requests
 import pandas as pd
 
@@ -29,10 +33,44 @@ class Buff:
             data.append(item_data)
         return data
 
+    async def fetch_item_price(self, session, itemID, rate, numOffersToCheck):
+        URL = "https://buff.163.com/api/market/goods/sell_order"
+        params = {
+            "game": "csgo",
+            "page_num": "1",
+            "goods_id": itemID
+        }
+        url = URL + '?' + urllib.parse.urlencode(params)
+        async with session.get(url) as response:
+            resp = await response.json()
+            items = resp["data"]["items"][:numOffersToCheck]
+            data = []
+            for item in items:
+                price = float(item["price"])
+                price_usd = round(float(price * rate), 2)
+                metaphysic = item["asset_info"]["info"].get("metaphysic", {}).get("data", {}).get("name", {})
+                item_data = {"price": price, "priceUSD": price_usd, "Phase/Fade": metaphysic}
+                data.append(item_data)
+            return data
+
+    async def main(self, items, rate, numOffersToCheck):
+        async with aiohttp.ClientSession() as session:
+            tasks = []
+
+            for itemID in items:
+                task = self.fetch_item_price(session, itemID, rate, numOffersToCheck)
+                tasks.append(task)
+
+            prices = await asyncio.gather(*tasks)
+
+            items_prices = []
+            for price in prices:
+                items_prices.append(price)
+            return items_prices
+
     def getBuffPriceById(self, item_id_list, rate, numOffersToCheck):
-        items_prices = []
-        for item in item_id_list:
-            items_prices.append(self.get_price_item(item, rate, numOffersToCheck))
+        buff = Buff()
+        items_prices = asyncio.run(self.main(item_id_list, rate, numOffersToCheck))
         return items_prices
 
     def get_buyorder_item(self, itemId, rate):

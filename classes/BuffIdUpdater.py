@@ -1,7 +1,6 @@
 import csv
 import os
 import requests
-import pandas as pd
 
 
 class BuffIdUpdater:

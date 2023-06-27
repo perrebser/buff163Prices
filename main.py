@@ -11,19 +11,21 @@ buff_id = BuffIdUpdater()
 # window.mainloop()
 
 item_list = []
-numOffersToCheck = int(input("How many offers would you like to check?Type the number of offers you want to check: (1,2,"
-                          "3...): "))
-check_with_file=input("Would you like to read item name from txt file or input manually? Y(file)/N(manual)")
-if(check_with_file!='Y'):
+numOffersToCheck = int(
+    input("How many offers would you like to check?Type the number of offers you want to check: (1,2,"
+          "3...): "))
+check_with_file = input("Would you like to read item name from txt file or input manually? Y(file)/N(manual)")
+if (check_with_file != 'Y'):
     while True:
         itemName = input("Type the name/s of the item to lookup (0 for exit): ")
-        if itemName == "0":
+        if itemName == '0':
             break
-    item_list.append(itemName)
+        item_list.append(itemName)
+
 else:
-    file_dir=input("Type the name of the file with the items name(must be in this directory): ")
-    with open(file_dir, 'r',encoding="utf8") as file:
-        items=file.read().splitlines()
+    file_dir = input("Type the name of the file with the items name(must be in this directory): ")
+    with open(file_dir, 'r', encoding="utf8") as file:
+        items = file.read().splitlines()
         for item in items:
             item_list.append(item)
 
@@ -46,3 +48,5 @@ with open(prices_file, 'w', newline='', encoding="utf8") as file:
     writer.writerow(['Item', 'Price(CNY)', 'Price(USD)', 'Attributes'])
     for item in data:
         writer.writerow(item)
+
+# print("--- %s seconds ---" % (time.time() - start_time))
