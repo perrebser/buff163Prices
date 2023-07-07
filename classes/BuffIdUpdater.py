@@ -27,17 +27,16 @@ class BuffIdUpdater:
             with open(BuffIdUpdater.FILE_NAME, 'w', encoding="utf8") as file:
                 file.write(new_content)
 
-
     def store_in_dict(self):
-        with open(BuffIdUpdater.FILE_NAME,'r',encoding="utf8")as file:
-            reader=csv.reader(file,delimiter=';')
+        with open(BuffIdUpdater.FILE_NAME, 'r', encoding="utf8") as file:
+            reader = csv.reader(file, delimiter=';')
             for row in reader:
-                item_id=row[0]
-                item_name=row[1]
-                self.dicdt[item_name]=item_id
+                item_id = row[0]
+                item_name = row[1]
+                self.dicdt[item_name] = item_id
 
     def search_id(self, item_list):
         id_list = []
         for item in item_list:
-             id_list.append(self.dicdt.get(item))
+            id_list.append(self.dicdt.get(item))
         return id_list
