@@ -85,16 +85,16 @@ class BuffPricesManager:
     def write_to_csv(self, sell_prices, buy_orders, item_list, prices_file):
         with open(prices_file, 'w', newline='', encoding="utf8") as file:
             writer = csv.writer(file, delimiter=',')
-            writer.writerow(['Item', 'Sell Price(CNY)', 'Sell Price(USD)', 'Buy Order(CNY)', 'Buy Order(USD)'])
+            writer.writerow(['Item', 'Sell Price(CNY)', 'Sell Price(USD)', 'Buy Order(CNY)', 'Buy Order(USD)','Phase-Fade'])
 
             for sell_data, buy_data, item_name in zip(sell_prices, buy_orders, item_list):
                 sell_price = sell_data[0]['price']
                 sell_price_usd = sell_data[0]['priceUSD']
                 buy_price = buy_data[0]['buy_order']
                 buy_price_usd = buy_data[0]['priceUSD']
-                attributes = sell_data[0].get('Attributes', '')
+                attributes = sell_data[0]['Phase/Fade']
 
-                writer.writerow([item_name, sell_price, sell_price_usd, buy_price, buy_price_usd,attributes])
+                writer.writerow([item_name, sell_price, sell_price_usd, buy_price, buy_price_usd, attributes])
 
     async def run(self):
         item_list, num_offers_to_check, pair, check_buy_orders = self.get_user_input()
