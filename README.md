@@ -31,6 +31,7 @@ To use the program, follow these steps:
 6. The program will generate a CSV file at the "../prices.csv" path with the name of the items, their price, and other relevant attributes such as phase in Dopplers or fade percentage in Fades.
 
 
+## Setup Buff163 cookies
 ---
 Feel free to customize the content according to your needs and add any other relevant sections for your project!
 
