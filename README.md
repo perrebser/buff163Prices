@@ -32,6 +32,14 @@ To use the program, follow these steps:
 
 
 ## Setup Buff163 cookies
+
+ Go to [buff163](buff.163.com), and get your cookies values, follow these steps(you need to login first):
+
+1. Press F12 to open the developer console
+2. Go to the Network tab and refresh the webpage
+3. Find session in the Set-Cookie field under Response Headers
+4. Copy the value of session and paste it into `config.json`
+
 ---
 Feel free to customize the content according to your needs and add any other relevant sections for your project!
 
