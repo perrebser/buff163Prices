@@ -33,11 +33,11 @@ To use the program, follow these steps:
 
 ## Setup Buff163 cookies
 
- Go to [buff163](buff.163.com), and get your cookies values, follow these steps(you need to login first):
+ Go to [buff163](https://buff.163.com), obtain your cookie values (necessary for certain functions, such as searching with a float range). Follow these steps (you need to log in first):
 
 1. Press F12 to open the developer console
 2. Go to the Network tab and refresh the webpage
-3. Find session in the Set-Cookie field under Response Headers
+3. Find session in the Set-Cookie field under Response Headers ![cookies_img](images/buff.PNG)
 4. Copy the value of session and paste it into `config.json`
 
 ---
