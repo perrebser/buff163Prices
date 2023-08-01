@@ -37,15 +37,18 @@ class BuffPricesManager:
         pair = input("Type the currency you want to convert to: ")  # At the moment only USD
 
         check_buy_orders = distutils.util.strtobool(input("Also check buy orders prices? (Y/N): "))
-        # check_float = distutils.util.strtobool(
-        #     input("Do you want to search within a specific range of floats? (Y/N): "))
-        # if not check_float:
-        #
-        # else:
-        #     min_float = input("Enter minimum value for float")
-        #     max_float = input("Enter maximum value for float")
-        # return item_list, num_offers_to_check, pair, min_float, max_float
-        return item_list, num_offers_to_check, pair, check_buy_orders
+        check_float = distutils.util.strtobool(
+            input("Do you want to search within a specific range of floats? (Y/N): "))
+        min_float = None
+        max_float = None
+        if not check_float:
+            pass
+        else:
+            min_float = input("Enter minimum value for float: ")
+            max_float = input("Enter maximum value for float: ")
+        return item_list, num_offers_to_check, pair, check_buy_orders, min_float, max_float
+        # return item_list, num_offers_to_check, pair, check_buy_orders
+
     def currencyConverter(self, toCurrency, fromCurrency):
         pair = fromCurrency.upper() + toCurrency.upper()
         URL = "https://www.freeforexapi.com/api/live?pairs=" + pair
@@ -53,7 +56,9 @@ class BuffPricesManager:
         rate = 1 / float(r["rates"][pair]["rate"])
         return rate
 
-    async def fetch_sell_prices(self, session, item_id, rate, num_offers_to_check):
+    async def fetch_sell_prices(self, session, item_id, rate, num_offers_to_check, **kwargs):
+        min_float = kwargs.get('min_float')
+        max_float = kwargs.get('max_float')
         URL = f"https://buff.163.com/api/market/goods/sell_order"
         params = {
             "game": "csgo",
@@ -111,8 +116,13 @@ class BuffPricesManager:
                 writer.writerow([item_name, sell_price, sell_price_usd, buy_price, buy_price_usd, attributes, wear])
 
     async def run(self):
-        item_list, num_offers_to_check, pair, check_buy_orders = self.get_user_input()
+        item_list, num_offers_to_check, pair, check_buy_orders, min_float, max_float = self.get_user_input()
 
+        kwargs = {}
+        if min_float is not None:
+            kwargs['min_float'] = min_float
+        if max_float is not None:
+            kwargs['max_float'] = max_float
         rate = self.currencyConverter("cny", pair)
         item_id_list = self.BuffIdUpdater.search_id(item_list)
 
@@ -121,7 +131,7 @@ class BuffPricesManager:
         async with aiohttp.ClientSession() as session:
             tasks = []
             for item_id in item_id_list:
-                tasks.append(self.fetch_sell_prices(session, item_id, rate, num_offers_to_check))
+                tasks.append(self.fetch_sell_prices(session, item_id, rate, num_offers_to_check, **kwargs))
                 if check_buy_orders:
                     tasks.append(self.fetch_buy_orders(session, item_id, rate, num_offers_to_check))
 
