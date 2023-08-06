@@ -105,11 +105,16 @@ class BuffPricesManager:
                 ['Item', 'Sell Price(CNY)', 'Sell Price(USD)', 'Buy Order(CNY)', 'Buy Order(USD)', 'Phase-Fade',
                  'Wear'])
 
-            for sell_data, buy_data, item_name in zip(sell_prices, buy_orders, item_list):
+            for sell_data, item_name in zip(sell_prices, item_list):
                 sell_price = sell_data[0]['price']
                 sell_price_usd = sell_data[0]['priceUSD']
-                buy_price = buy_data[0]['buy_order']
-                buy_price_usd = buy_data[0]['priceUSD']
+                try:
+                    buy_data = buy_orders.pop(0)
+                    buy_price = buy_data[0]['buy_order']
+                    buy_price_usd = buy_data[0]['priceUSD']
+                except IndexError:
+                    buy_price = ''
+                    buy_price_usd = ''
                 attributes = sell_data[0]['Phase/Fade']
                 wear = sell_data[0]['Wear']
 
@@ -138,5 +143,4 @@ class BuffPricesManager:
             results = await asyncio.gather(*tasks)
             sell_prices = results[::2]
             buy_orders = results[1::2]
-
         self.write_to_csv(sell_prices, buy_orders, item_list, '../prices.csv')
