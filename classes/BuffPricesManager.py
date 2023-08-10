@@ -68,6 +68,7 @@ class BuffPricesManager:
         url = URL + '?' + urllib.parse.urlencode(params)
         async with session.get(url) as response:
             resp = await response.json()
+            item_name = resp["data"]["goods_infos"][item_id]["market_hash_name"]
             items = resp["data"]["items"][:num_offers_to_check]
             data = []
             for item in items:
@@ -75,7 +76,8 @@ class BuffPricesManager:
                 price_usd = round(float(price * rate), 2)
                 wear = (item["asset_info"]["paintwear"])
                 metaphysic = item["asset_info"]["info"].get("metaphysic", {}).get("data", {}).get("name", {})
-                item_data = {"price": price, "priceUSD": price_usd, "Phase/Fade": metaphysic, "Wear": wear}
+                item_data = {"item_name": item_name, "price": price, "priceUSD": price_usd, "Phase/Fade": metaphysic,
+                             "Wear": wear}
                 data.append(item_data)
             return data
 
@@ -99,26 +101,29 @@ class BuffPricesManager:
             return data
 
     def write_to_csv(self, sell_prices, buy_orders, item_list, prices_file):
+        data = []
+        for sell_data_list in sell_prices:
+            for i, sell_data in enumerate(sell_data_list):
+                sell_price = sell_data['price']
+                sell_price_usd = sell_data['priceUSD']
+                try:
+                    buy_data = buy_orders.pop(i)
+                    buy_price = buy_data[i]['buy_order']
+                    buy_price_usd = buy_data[i]['priceUSD']
+                except IndexError:
+                    buy_price = ''
+                    buy_price_usd = ''
+                attributes = sell_data['Phase/Fade']
+                wear = sell_data['Wear']
+                item_name = sell_data['item_name']
+                data.append([item_name, sell_price, sell_price_usd, buy_price, buy_price_usd, attributes, wear])
         with open(prices_file, 'w', newline='', encoding="utf8") as file:
             writer = csv.writer(file, delimiter=',')
             writer.writerow(
                 ['Item', 'Sell Price(CNY)', 'Sell Price(USD)', 'Buy Order(CNY)', 'Buy Order(USD)', 'Phase-Fade',
                  'Wear'])
-
-            for sell_data, item_name in zip(sell_prices, item_list):
-                sell_price = sell_data[0]['price']
-                sell_price_usd = sell_data[0]['priceUSD']
-                try:
-                    buy_data = buy_orders.pop(0)
-                    buy_price = buy_data[0]['buy_order']
-                    buy_price_usd = buy_data[0]['priceUSD']
-                except IndexError:
-                    buy_price = ''
-                    buy_price_usd = ''
-                attributes = sell_data[0]['Phase/Fade']
-                wear = sell_data[0]['Wear']
-
-                writer.writerow([item_name, sell_price, sell_price_usd, buy_price, buy_price_usd, attributes, wear])
+            for item in data:
+                writer.writerow(item)
 
     async def run(self):
         item_list, num_offers_to_check, pair, check_buy_orders, min_float, max_float = self.get_user_input()
