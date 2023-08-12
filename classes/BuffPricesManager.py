@@ -10,6 +10,8 @@ from classes.BuffIdUpdater import BuffIdUpdater
 
 
 class BuffPricesManager:
+    FILE_PATH = '../prices.csv'
+
     def __init__(self, header):
         self.BuffIdUpdater = BuffIdUpdater()
         self.header = {
@@ -100,16 +102,17 @@ class BuffPricesManager:
                 data.append(item_data)
             return data
 
-    def write_to_csv(self, sell_prices, buy_orders, item_list, prices_file):
+    def write_to_csv(self, sell_prices, buy_orders, prices_file):
         data = []
         for sell_data_list in sell_prices:
-            for i, sell_data in enumerate(sell_data_list):
+            for sell_data in sell_data_list:
                 sell_price = sell_data['price']
                 sell_price_usd = sell_data['priceUSD']
                 try:
-                    buy_data = buy_orders.pop(i)
-                    buy_price = buy_data[i]['buy_order']
-                    buy_price_usd = buy_data[i]['priceUSD']
+                    for buy_data_list in buy_orders:
+                        for buy_data in buy_data_list:
+                            buy_price = buy_data['buy_order']
+                            buy_price_usd = buy_data['priceUSD']
                 except IndexError:
                     buy_price = ''
                     buy_price_usd = ''
@@ -148,4 +151,4 @@ class BuffPricesManager:
             results = await asyncio.gather(*tasks)
             sell_prices = results[::2]
             buy_orders = results[1::2]
-        self.write_to_csv(sell_prices, buy_orders, item_list, '../prices.csv')
+        self.write_to_csv(sell_prices, buy_orders, self.FILE_PATH)
