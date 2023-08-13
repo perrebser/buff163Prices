@@ -30,6 +30,13 @@ To use the program, follow these steps:
 5. You can also add the currency in which you want the price of the items (currently only USD).
 6. The program will generate a CSV file at the "../prices.csv" path with the name of the items, their price, and other relevant attributes such as phase in Dopplers or fade percentage in Fades.
 
+### Example
+Screenshots for input and its corresponding response in the CSV file.:
+
+![input_example](/images/example.PNG)
+![response](/images/resp.PNG)
+
+---
 
 ## Setup Buff163 cookies
 

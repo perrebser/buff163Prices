@@ -101,7 +101,7 @@ class BuffPricesManager:
                 sell_price = item_price['price']
                 sell_price_usd = item_price['priceUSD']
                 buy_price = item_price['buy_order']
-                buy_price_usd = item_price['priceUSD']
+                buy_price_usd = item_price['priceUSDBuy']
                 attributes = item_price['Phase/Fade']
                 wear = item_price['Wear']
                 item_name = item_price['item_name']
