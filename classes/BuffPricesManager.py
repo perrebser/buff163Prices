@@ -49,7 +49,6 @@ class BuffPricesManager:
             min_float = input("Enter minimum value for float: ")
             max_float = input("Enter maximum value for float: ")
         return item_list, num_offers_to_check, pair, check_buy_orders, min_float, max_float
-        # return item_list, num_offers_to_check, pair, check_buy_orders
 
     def currencyConverter(self, toCurrency, fromCurrency):
         pair = fromCurrency.upper() + toCurrency.upper()
@@ -58,17 +57,18 @@ class BuffPricesManager:
         rate = 1 / float(r["rates"][pair]["rate"])
         return rate
 
-    async def fetch_sell_prices(self, session, item_id, rate, num_offers_to_check, **kwargs):
+    async def fetch_sell_prices(self, session, item_id, rate, num_offers_to_check, check_buy_orders, **kwargs):
         min_float = kwargs.get('min_float')
         max_float = kwargs.get('max_float')
-        URL = f"https://buff.163.com/api/market/goods/sell_order"
+        base_url = f"https://buff.163.com/api/market/goods/"
         params = {
             "game": "csgo",
             "page_num": "1",
             "goods_id": item_id
         }
-        url = URL + '?' + urllib.parse.urlencode(params)
-        async with session.get(url) as response:
+        sell_url = base_url + 'sell_order' + '?' + urllib.parse.urlencode(params)
+        buy_url = base_url + 'buy_order' + '?' + urllib.parse.urlencode(params)
+        async with session.get(sell_url) as response:
             resp = await response.json()
             item_name = resp["data"]["goods_infos"][item_id]["market_hash_name"]
             items = resp["data"]["items"][:num_offers_to_check]
@@ -78,47 +78,33 @@ class BuffPricesManager:
                 price_usd = round(float(price * rate), 2)
                 wear = (item["asset_info"]["paintwear"])
                 metaphysic = item["asset_info"]["info"].get("metaphysic", {}).get("data", {}).get("name", {})
-                item_data = {"item_name": item_name, "price": price, "priceUSD": price_usd, "Phase/Fade": metaphysic,
+                item_data = {"item_name": item_name, "price": price, "priceUSD": price_usd, "buy_order": '',
+                             "priceUSDBuy": '', "Phase/Fade": metaphysic,
                              "Wear": wear}
                 data.append(item_data)
+                if check_buy_orders:
+                    async with session.get(buy_url) as buy_response:
+                        buy_resp = await buy_response.json()
+                        items_buy = buy_resp["data"]["items"][:num_offers_to_check]
+                        for i, item_buy in enumerate(items_buy):
+                            if i < len(data):
+                                buy_price = float(item_buy["price"])
+                                buy_price_usd = round(float(buy_price * rate), 2)
+                                data[i]["buy_order"] = buy_price
+                                data[i]["priceUSDBuy"] = buy_price_usd
             return data
 
-    async def fetch_buy_orders(self, session, item_id, rate, num_offers_to_check):
-        URL = f"https://buff.163.com/api/market/goods/buy_order"
-        params = {
-            "game": "csgo",
-            "page_num": "1",
-            "goods_id": item_id
-        }
-        url = URL + '?' + urllib.parse.urlencode(params)
-        async with session.get(url) as response:
-            resp = await response.json()
-            items = resp["data"]["items"][:num_offers_to_check]
-            data = []
-            for item in items:
-                price = float(item["price"])
-                price_usd = round(float(price * rate), 2)
-                item_data = {"buy_order": price, "priceUSD": price_usd}
-                data.append(item_data)
-            return data
-
-    def write_to_csv(self, sell_prices, buy_orders, prices_file):
+    def write_to_csv(self, items_prices, prices_file):
         data = []
-        for sell_data_list in sell_prices:
-            for sell_data in sell_data_list:
-                sell_price = sell_data['price']
-                sell_price_usd = sell_data['priceUSD']
-                try:
-                    for buy_data_list in buy_orders:
-                        for buy_data in buy_data_list:
-                            buy_price = buy_data['buy_order']
-                            buy_price_usd = buy_data['priceUSD']
-                except IndexError:
-                    buy_price = ''
-                    buy_price_usd = ''
-                attributes = sell_data['Phase/Fade']
-                wear = sell_data['Wear']
-                item_name = sell_data['item_name']
+        for item_price_offers in items_prices:
+            for item_price in item_price_offers:
+                sell_price = item_price['price']
+                sell_price_usd = item_price['priceUSD']
+                buy_price = item_price['buy_order']
+                buy_price_usd = item_price['priceUSD']
+                attributes = item_price['Phase/Fade']
+                wear = item_price['Wear']
+                item_name = item_price['item_name']
                 data.append([item_name, sell_price, sell_price_usd, buy_price, buy_price_usd, attributes, wear])
         with open(prices_file, 'w', newline='', encoding="utf8") as file:
             writer = csv.writer(file, delimiter=',')
@@ -139,16 +125,11 @@ class BuffPricesManager:
         rate = self.currencyConverter("cny", pair)
         item_id_list = self.BuffIdUpdater.search_id(item_list)
 
-        sell_prices = []
-        buy_orders = []
         async with aiohttp.ClientSession() as session:
             tasks = []
             for item_id in item_id_list:
-                tasks.append(self.fetch_sell_prices(session, item_id, rate, num_offers_to_check, **kwargs))
-                if check_buy_orders:
-                    tasks.append(self.fetch_buy_orders(session, item_id, rate, num_offers_to_check))
+                tasks.append(
+                    self.fetch_sell_prices(session, item_id, rate, num_offers_to_check, check_buy_orders, **kwargs))
 
             results = await asyncio.gather(*tasks)
-            sell_prices = results[::2]
-            buy_orders = results[1::2]
-        self.write_to_csv(sell_prices, buy_orders, self.FILE_PATH)
+        self.write_to_csv(results, self.FILE_PATH)
