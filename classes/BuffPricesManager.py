@@ -49,9 +49,10 @@ class BuffPricesManager:
             min_float = None
             max_float = None
             if check_float:
-                min_float = input("Enter minimum value for float: ")
-                max_float = input("Enter maximum value for float: ")
-
+                min_float = float(input("Enter minimum value for float: "))
+                max_float = float(input("Enter maximum value for float: "))
+                if min_float > max_float:
+                    raise ValueError("Minimum value cannot be greater than maximum value")
         except ValueError as e:
             print("Invalid input:", e)
             return None
@@ -87,6 +88,7 @@ class BuffPricesManager:
         }
         sell_url = base_url + 'sell_order' + '?' + urllib.parse.urlencode(params)
         buy_url = base_url + 'buy_order' + '?' + urllib.parse.urlencode(params)
+        wear_url = sell_url + f'&min_paintwear={min_float}&max_paintwear={max_float}'  ##Only available when logged in using cookies
         async with session.get(sell_url) as response:
             resp = await response.json()
             item_name = resp["data"]["goods_infos"][item_id]["market_hash_name"]
