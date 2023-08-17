@@ -1,6 +1,7 @@
 import asyncio
 import csv
 import distutils
+import json
 import urllib
 
 import aiohttp
@@ -20,42 +21,60 @@ class BuffPricesManager:
 
     def get_user_input(self):
         item_list = []
-        num_offers_to_check = int(
-            input("How many offers would you like to check? Type the number of offers you want to check: "))
+        try:
+            num_offers_to_check = int(
+                input("How many offers would you like to check? Type the number of offers you want to check: "))
 
-        check_with_file = input("Would you like to read item names from a txt file? (Y/N): ")
+            check_with_file = input("Would you like to read item names from a txt file? (Y/N): ").upper()
 
-        if check_with_file.upper() == 'Y':
-            file_dir = input("Type the name of the file with the item names (must be in this directory): ")
-            with open(file_dir, 'r', encoding="utf8") as file:
-                item_list = file.read().splitlines()
-        else:
-            while True:
-                item_name = input("Type the name/s of the item to lookup (0 to exit): ")
-                if item_name == '0':
-                    break
-                item_list.append(item_name)
+            if check_with_file == 'Y':
+                file_dir = input("Type the name of the file with the item names (must be in this directory): ")
+                try:
+                    with open(file_dir, 'r', encoding="utf8") as file:
+                        item_list = file.read().splitlines()
+                except FileNotFoundError as ex:
+                    print(f"Error opening file '{file_dir}': {ex.strerror}")
+            else:
+                while True:
+                    item_name = input("Type the name/s of the item to lookup (0 to exit): ")
+                    if item_name == '0':
+                        break
+                    item_list.append(item_name)
 
-        pair = input("Type the currency you want to convert to: ")  # At the moment only USD
+            pair = input("Type the currency you want to convert to: ").upper()
 
-        check_buy_orders = distutils.util.strtobool(input("Also check buy orders prices? (Y/N): "))
-        check_float = distutils.util.strtobool(
-            input("Do you want to search within a specific range of floats? (Y/N): "))
-        min_float = None
-        max_float = None
-        if not check_float:
-            pass
-        else:
-            min_float = input("Enter minimum value for float: ")
-            max_float = input("Enter maximum value for float: ")
+            check_buy_orders = distutils.util.strtobool(input("Also check buy orders prices? (Y/N): "))
+            check_float = distutils.util.strtobool(
+                input("Do you want to search within a specific range of floats? (Y/N): "))
+            min_float = None
+            max_float = None
+            if check_float:
+                min_float = input("Enter minimum value for float: ")
+                max_float = input("Enter maximum value for float: ")
+
+        except ValueError as e:
+            print("Invalid input:", e)
+            return None
+
         return item_list, num_offers_to_check, pair, check_buy_orders, min_float, max_float
 
     def currencyConverter(self, toCurrency, fromCurrency):
         pair = fromCurrency.upper() + toCurrency.upper()
         URL = "https://www.freeforexapi.com/api/live?pairs=" + pair
-        r = requests.get(URL).json()
-        rate = 1 / float(r["rates"][pair]["rate"])
-        return rate
+        response = requests.get(URL)
+        if response.status_code == 200:
+            try:
+                response_json = response.json()
+                if 'message' not in response_json:
+                    rate = 1 / float(response_json["rates"][pair]["rate"])
+                    return rate
+                else:
+                    print("Currency pair not found in response:", pair)
+            except json.JSONDecodeError:
+                print("Error decoding json response")
+        else:
+            print("Request currency converter failed with status code", response.status_code)
+        return None
 
     async def fetch_sell_prices(self, session, item_id, rate, num_offers_to_check, check_buy_orders, **kwargs):
         min_float = kwargs.get('min_float')
@@ -106,13 +125,18 @@ class BuffPricesManager:
                 wear = item_price['Wear']
                 item_name = item_price['item_name']
                 data.append([item_name, sell_price, sell_price_usd, buy_price, buy_price_usd, attributes, wear])
-        with open(prices_file, 'w', newline='', encoding="utf8") as file:
-            writer = csv.writer(file, delimiter=',')
-            writer.writerow(
-                ['Item', 'Sell Price(CNY)', 'Sell Price(USD)', 'Buy Order(CNY)', 'Buy Order(USD)', 'Phase-Fade',
-                 'Wear'])
-            for item in data:
-                writer.writerow(item)
+        try:
+            with open(prices_file, 'w', newline='', encoding="utf8") as file:
+                writer = csv.writer(file, delimiter=',')
+                writer.writerow(
+                    ['Item', 'Sell Price(CNY)', 'Sell Price(USD)', 'Buy Order(CNY)', 'Buy Order(USD)', 'Phase-Fade',
+                     'Wear'])
+                for item in data:
+                    writer.writerow(item)
+        except PermissionError as e:
+            print(f"You don't have permission to write to the file: {e}")
+        except IOError as ex:
+            print(f"Error writing file: {ex}")
 
     async def run(self):
         item_list, num_offers_to_check, pair, check_buy_orders, min_float, max_float = self.get_user_input()
