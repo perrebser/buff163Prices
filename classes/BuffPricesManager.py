@@ -78,6 +78,7 @@ class BuffPricesManager:
         return None
 
     async def fetch_sell_prices(self, session, item_id, rate, num_offers_to_check, check_buy_orders, **kwargs):
+        data = []
         min_float = kwargs.get('min_float')
         max_float = kwargs.get('max_float')
         base_url = f"https://buff.163.com/api/market/goods/"
@@ -91,42 +92,47 @@ class BuffPricesManager:
         wear_url = sell_url + f'&min_paintwear={min_float}&max_paintwear={max_float}'  ##Only available when logged in using cookies
         async with session.get(sell_url) as response:
             resp = await response.json()
-            item_name = resp["data"]["goods_infos"][item_id]["market_hash_name"]
-            items = resp["data"]["items"][:num_offers_to_check]
-            data = []
-            for item in items:
-                price = float(item["price"])
-                price_usd = round(float(price * rate), 2)
-                wear = (item["asset_info"]["paintwear"])
-                metaphysic = item["asset_info"]["info"].get("metaphysic", {}).get("data", {}).get("name", {})
-                item_data = {"item_name": item_name, "price": price, "priceUSD": price_usd, "buy_order": '',
-                             "priceUSDBuy": '', "Phase/Fade": metaphysic,
-                             "Wear": wear}
-                data.append(item_data)
-                if check_buy_orders:
-                    async with session.get(buy_url) as buy_response:
-                        buy_resp = await buy_response.json()
-                        items_buy = buy_resp["data"]["items"][:num_offers_to_check]
-                        for i, item_buy in enumerate(items_buy):
-                            if i < len(data):
-                                buy_price = float(item_buy["price"])
-                                buy_price_usd = round(float(buy_price * rate), 2)
-                                data[i]["buy_order"] = buy_price
-                                data[i]["priceUSDBuy"] = buy_price_usd
-            return data
+            if len(resp["data"]["items"]) == 0:
+                print(f"Not offers found for item with id: {item_id}")
+                data = []
+            else:
+                item_name = resp["data"]["goods_infos"][item_id]["market_hash_name"]
+                items = resp["data"]["items"][:num_offers_to_check]
+                data = []
+                for item in items:
+                    price = float(item["price"])
+                    price_usd = round(float(price * rate), 2)
+                    wear = (item["asset_info"]["paintwear"])
+                    metaphysic = item["asset_info"]["info"].get("metaphysic", {}).get("data", {}).get("name", {})
+                    item_data = {"item_name": item_name, "price": price, "priceUSD": price_usd, "buy_order": '',
+                                 "priceUSDBuy": '', "Phase/Fade": metaphysic,
+                                 "Wear": wear}
+                    data.append(item_data)
+                    if check_buy_orders:
+                        async with session.get(buy_url) as buy_response:
+                            buy_resp = await buy_response.json()
+                            items_buy = buy_resp["data"]["items"][:num_offers_to_check]
+                            for i, item_buy in enumerate(items_buy):
+                                if i < len(data):
+                                    buy_price = float(item_buy["price"])
+                                    buy_price_usd = round(float(buy_price * rate), 2)
+                                    data[i]["buy_order"] = buy_price
+                                    data[i]["priceUSDBuy"] = buy_price_usd
+                return data
 
     def write_to_csv(self, items_prices, prices_file):
         data = []
-        for item_price_offers in items_prices:
-            for item_price in item_price_offers:
-                sell_price = item_price['price']
-                sell_price_usd = item_price['priceUSD']
-                buy_price = item_price['buy_order']
-                buy_price_usd = item_price['priceUSDBuy']
-                attributes = item_price['Phase/Fade']
-                wear = item_price['Wear']
-                item_name = item_price['item_name']
-                data.append([item_name, sell_price, sell_price_usd, buy_price, buy_price_usd, attributes, wear])
+        if items_prices[0] is not None:
+            for item_price_offers in items_prices:
+                for item_price in item_price_offers:
+                    sell_price = item_price['price']
+                    sell_price_usd = item_price['priceUSD']
+                    buy_price = item_price['buy_order']
+                    buy_price_usd = item_price['priceUSDBuy']
+                    attributes = item_price['Phase/Fade']
+                    wear = item_price['Wear']
+                    item_name = item_price['item_name']
+                    data.append([item_name, sell_price, sell_price_usd, buy_price, buy_price_usd, attributes, wear])
         try:
             with open(prices_file, 'w', newline='', encoding="utf8") as file:
                 writer = csv.writer(file, delimiter=',')
