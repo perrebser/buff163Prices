@@ -2,6 +2,7 @@ import asyncio
 import csv
 import distutils
 import json
+import sys
 import urllib
 
 import aiohttp
@@ -12,12 +13,28 @@ from classes.BuffIdUpdater import BuffIdUpdater
 
 class BuffPricesManager:
     FILE_PATH = '../prices.csv'
+    RED_COLOR_FOR_ERROR = '\033[91m'
 
     def __init__(self, header):
         self.BuffIdUpdater = BuffIdUpdater()
         self.header = {
             "Cookie": str(header)
         }
+
+    def check_config_json(self):
+        cookie = self.header.get('Cookie')
+        if cookie == '':
+            print("config.json empty!\n.You need to configure config.json file")
+        values = cookie.split(";")
+        dictionary = {}
+        for value in values:
+            key, value = value.split('=')
+            dictionary[key.strip()] = value.strip()
+        for val in ['Device-Id', 'session', 'csrf_token']:
+            if dictionary.get(val) is None:
+                print(f'{self.RED_COLOR_FOR_ERROR}Wrong config.json.\n Please check the config guide: '
+                      'https://github.com/perrebser/buff163Prices#setup-buff163-cookies')
+                sys.exit()
 
     def get_user_input(self):
         item_list = []
@@ -89,7 +106,9 @@ class BuffPricesManager:
         }
         sell_url = base_url + 'sell_order' + '?' + urllib.parse.urlencode(params)
         buy_url = base_url + 'buy_order' + '?' + urllib.parse.urlencode(params)
-        wear_url = sell_url + f'&min_paintwear={min_float}&max_paintwear={max_float}'  ##Only available when logged in using cookies
+        if min_float and max_float is not None:
+            sell_url = sell_url + f'&min_paintwear={min_float}&max_paintwear={max_float}'  ##Only available when logged in using cookies
+            buy_url = buy_url + f'&min_paintwear={min_float}&max_paintwear={max_float}'
         async with session.get(sell_url) as response:
             resp = await response.json()
             if len(resp["data"]["items"]) == 0:
@@ -150,14 +169,14 @@ class BuffPricesManager:
         item_list, num_offers_to_check, pair, check_buy_orders, min_float, max_float = self.get_user_input()
 
         kwargs = {}
-        if min_float is not None:
+        if min_float and max_float is not None:
             kwargs['min_float'] = min_float
-        if max_float is not None:
             kwargs['max_float'] = max_float
+            self.check_config_json()
         rate = self.currencyConverter("cny", pair)
         item_id_list = self.BuffIdUpdater.search_id(item_list)
-
-        async with aiohttp.ClientSession() as session:
+        headers = self.header
+        async with aiohttp.ClientSession(headers=headers) as session:
             tasks = []
             for item_id in item_id_list:
                 tasks.append(

@@ -154,6 +154,8 @@ cython_debug/
 
 #File generated in execution
 goodsIds.txt
+#Config file for cookies
+config.json
 
 # PyCharm
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
