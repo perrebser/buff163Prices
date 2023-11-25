@@ -45,7 +45,8 @@ Screenshots for input and its corresponding response in the CSV file.:
 1. Press F12 to open the developer console
 2. Go to the Network tab and refresh the webpage
 3. Find session in the Set-Cookie field under Response Headers ![cookies_img](images/buff.PNG)
-4. Copy the value of session and paste it into `config.json`
+4. Copy the value of session and paste it into `config.json`(you need the value of **Device-Id**;**session**;**csrf_token**)
+5. `config.json` should look like this if you want to search by min and max float ![example_img](images/config_example.PNG)
 
 ---
 Feel free to customize the content according to your needs and add any other relevant sections for your project!
