@@ -4,6 +4,7 @@ import distutils
 import json
 import sys
 import urllib
+from datetime import datetime
 
 import aiohttp
 import requests
@@ -25,6 +26,7 @@ class BuffPricesManager:
         cookie = self.header.get('Cookie')
         if cookie == '':
             print("config.json empty!\n.You need to configure config.json file")
+            sys.exit()
         values = cookie.split(";")
         dictionary = {}
         for value in values:
@@ -73,8 +75,9 @@ class BuffPricesManager:
         except ValueError as e:
             print("Invalid input:", e)
             return None
-
-        return item_list, num_offers_to_check, pair, check_buy_orders, min_float, max_float
+        check_last_sales = distutils.util.strtobool(input("Do you want to generate a file with the latest sales of the "
+                                                          "items? (Config.json file configuration required) Y/N"))
+        return item_list, num_offers_to_check, pair, check_buy_orders, min_float, max_float, check_last_sales
 
     def currencyConverter(self, toCurrency, fromCurrency):
         pair = fromCurrency.upper() + toCurrency.upper()
@@ -165,11 +168,32 @@ class BuffPricesManager:
         except IOError as ex:
             print(f"Error writing file: {ex}")
 
-    async def run(self):
-        item_list, num_offers_to_check, pair, check_buy_orders, min_float, max_float = self.get_user_input()
+    async def fetch_last_sales(self, session, item_id):
+        base_url = f"https://buff.163.com/api/market/goods/"
+        data = []
+        params = {
+            "game": "csgo",
+            "page_num": "1",
+            "goods_id": item_id,
+            "page_size": 10
+        }
+        last_sales_url = base_url + 'bill_order' + '?' + urllib.parse.urlencode(params)
+        async with session.get(last_sales_url) as response:
+            resp = await response.json()
+            items = resp["data"]["items"][:10]
+            for item in items:
+                sell_price = float(item["price"])
+                sell_date = datetime.fromtimestamp(item["transact_time"])
+                sell_type = item["type"]
+                wear = item["asset_info"]["paintwear"]
+                item_data = {"sell_price": sell_price, "sell_date": sell_date, "sell_type": sell_type,"float":wear}
+                data.append(item_data)
+        return data
 
+    async def run(self):
+        item_list, num_offers_to_check, pair, check_buy_orders, min_float, max_float, check_last_sales = self.get_user_input()
         kwargs = {}
-        if min_float and max_float is not None:
+        if (isinstance(min_float, float) and isinstance(max_float, float)) or check_last_sales:
             kwargs['min_float'] = min_float
             kwargs['max_float'] = max_float
             self.check_config_json()
@@ -181,6 +205,8 @@ class BuffPricesManager:
             for item_id in item_id_list:
                 tasks.append(
                     self.fetch_sell_prices(session, item_id, rate, num_offers_to_check, check_buy_orders, **kwargs))
-
-            results = await asyncio.gather(*tasks)
-        self.write_to_csv(results, self.FILE_PATH)
+                if check_last_sales:
+                    tasks.append(self.fetch_last_sales(session, item_id))
+            results_sells = await asyncio.gather(*tasks)
+            # print(results_sells)
+        self.write_to_csv(results_sells, self.FILE_PATH)
