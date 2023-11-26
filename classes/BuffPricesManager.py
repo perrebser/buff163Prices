@@ -14,6 +14,7 @@ from classes.BuffIdUpdater import BuffIdUpdater
 
 class BuffPricesManager:
     FILE_PATH = '../prices.csv'
+    FILE_PATH_LAST_SALES = '../last_sales.csv'
     RED_COLOR_FOR_ERROR = '\033[91m'
 
     def __init__(self, header):
@@ -76,7 +77,7 @@ class BuffPricesManager:
             print("Invalid input:", e)
             return None
         check_last_sales = distutils.util.strtobool(input("Do you want to generate a file with the latest sales of the "
-                                                          "items? (Config.json file configuration required) Y/N"))
+                                                          "items? (Config.json file configuration required) Y/N: "))
         return item_list, num_offers_to_check, pair, check_buy_orders, min_float, max_float, check_last_sales
 
     def currencyConverter(self, toCurrency, fromCurrency):
@@ -142,19 +143,27 @@ class BuffPricesManager:
                                     data[i]["priceUSDBuy"] = buy_price_usd
                 return data
 
-    def write_to_csv(self, items_prices, prices_file):
+    def write_to_csv(self, items_prices, last_sales, prices_file, last_sales_file):
         data = []
+        data_last_sales = []
         if items_prices[0] is not None:
             for item_price_offers in items_prices:
-                for item_price in item_price_offers:
-                    sell_price = item_price['price']
-                    sell_price_usd = item_price['priceUSD']
-                    buy_price = item_price['buy_order']
-                    buy_price_usd = item_price['priceUSDBuy']
-                    attributes = item_price['Phase/Fade']
-                    wear = item_price['Wear']
-                    item_name = item_price['item_name']
-                    data.append([item_name, sell_price, sell_price_usd, buy_price, buy_price_usd, attributes, wear])
+                sell_price = item_price_offers['price']
+                sell_price_usd = item_price_offers['priceUSD']
+                buy_price = item_price_offers['buy_order']
+                buy_price_usd = item_price_offers['priceUSDBuy']
+                attributes = item_price_offers['Phase/Fade']
+                wear = item_price_offers['Wear']
+                item_name = item_price_offers['item_name']
+                data.append([item_name, sell_price, sell_price_usd, buy_price, buy_price_usd, attributes, wear])
+        if last_sales[0] is not None:
+            for last_sale_info in last_sales:
+                item_id = last_sale_info["item_id"]
+                item_wear = last_sale_info["float"]
+                date = last_sale_info["sell_date"]
+                price = last_sale_info["sell_price"]
+                sell_type = "Sell" if last_sale_info["sell_type"] == 1 else "Buy_Order"
+                data_last_sales.append([item_id, item_wear, date, price, sell_type])
         try:
             with open(prices_file, 'w', newline='', encoding="utf8") as file:
                 writer = csv.writer(file, delimiter=',')
@@ -163,6 +172,13 @@ class BuffPricesManager:
                      'Wear'])
                 for item in data:
                     writer.writerow(item)
+            with open(last_sales_file, 'w', newline='', encoding="utf8") as file2:
+                writer = csv.writer(file2, delimiter=',')
+                writer.writerow(
+                    ['ItemID', 'Wear', 'Sell Date', 'Sell Price', 'Sell Type'])
+                for item in data_last_sales:
+                    writer.writerow((item)
+                                    )
         except PermissionError as e:
             print(f"You don't have permission to write to the file: {e}")
         except IOError as ex:
@@ -182,11 +198,13 @@ class BuffPricesManager:
             resp = await response.json()
             items = resp["data"]["items"][:10]
             for item in items:
+                item_id = item["asset_info"]["goods_id"]
                 sell_price = float(item["price"])
                 sell_date = datetime.fromtimestamp(item["transact_time"])
                 sell_type = item["type"]
                 wear = item["asset_info"]["paintwear"]
-                item_data = {"sell_price": sell_price, "sell_date": sell_date, "sell_type": sell_type,"float":wear}
+                item_data = {"item_id": item_id, "sell_price": sell_price, "sell_date": sell_date,
+                             "sell_type": sell_type, "float": wear}
                 data.append(item_data)
         return data
 
@@ -207,6 +225,5 @@ class BuffPricesManager:
                     self.fetch_sell_prices(session, item_id, rate, num_offers_to_check, check_buy_orders, **kwargs))
                 if check_last_sales:
                     tasks.append(self.fetch_last_sales(session, item_id))
-            results_sells = await asyncio.gather(*tasks)
-            # print(results_sells)
-        self.write_to_csv(results_sells, self.FILE_PATH)
+            results_sells, result_last_sales = await asyncio.gather(*tasks)
+        self.write_to_csv(results_sells, result_last_sales, self.FILE_PATH, self.FILE_PATH_LAST_SALES)

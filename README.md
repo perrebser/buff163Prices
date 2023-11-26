@@ -2,6 +2,13 @@
 
 This program allows you to check the sell prices of CS:GO items and store the information in a CSV file.
 
+## Features
+- Check sell prices for specific items
+- Check buy orders
+- Currency converter (USD)
+- Search with range of float
+- Info about trade records in the page
+
 ## Requirements
 
 Before using this program, make sure you have the following requirements:
@@ -28,13 +35,15 @@ To use the program, follow these steps:
 3. You will be prompted to enter the names of the items you want to check. For example: "★ M9 Bayonet | Bright Water (Field-Tested)" when you have added all the items you want to search for, write 0 to make the search.
 4. You can also specify the name of a file(**.txt**) in the application directory where you have multiple item names to read them all at once.
 5. You can also add the currency in which you want the price of the items (currently only USD).
-6. The program will generate a CSV file at the "../prices.csv" path with the name of the items, their price, and other relevant attributes such as phase in Dopplers or fade percentage in Fades.
+6. You can specify if you want info about buy orders for the specified items.
+7. You can choose if you want the program to generate another file called **last_sales.csv**, with info about the sales for the specified items
+8. The program will generate a CSV file at the "../prices.csv" path with the name of the items, their price, and other relevant attributes such as phase in Dopplers or fade percentage in Fades.
 
 ### Example
 Screenshots for input and its corresponding response in the CSV file.:
 
-![input_example](/images/example.PNG)
-![response](/images/resp.PNG)
+![input_example](/images/new_example.PNG)
+![response](/images/new_response.PNG)
 
 ---
 
